@@ -1,7 +1,11 @@
 -- =====================================================
 -- Database: kniploket_tiko
 -- =====================================================
-CREATE DATABASE IF NOT EXISTS `kniploket_tiko`
+
+-- Drop en hermaak de database zodat het script meerdere keren uitvoerbaar is
+DROP DATABASE IF EXISTS `kniploket_tiko`;
+
+CREATE DATABASE `kniploket_tiko`
     DEFAULT CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
