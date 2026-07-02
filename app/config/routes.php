@@ -33,7 +33,7 @@ return [
     'POST /klanten/wijzigen'        => ['KlantController', 'wijzigen'],
     'POST /klanten/verwijderen'     => ['KlantController', 'verwijderen'],
 
-    // Productenbeheer (alleen ingelogde medewerkers/eigenaar)
+    // Productenbeheer – volledig CRUD (alleen ingelogde medewerkers/eigenaar)
     'GET /producten'                => ['ProductController', 'index'],
     'GET /producten/detail'         => ['ProductController', 'detail'],
     'GET /producten/aanmaken'       => ['ProductController', 'aanmakenForm'],
@@ -42,3 +42,4 @@ return [
     'POST /producten/wijzigen'      => ['ProductController', 'wijzigen'],
     'POST /producten/verwijderen'   => ['ProductController', 'verwijderen'],
 ];
+
