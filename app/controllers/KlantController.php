@@ -192,12 +192,21 @@ class KlantController extends Controller
     {
         $this->vereisLogin();
 
-        if (!$this->valideerCsrfToken($_POST['csrf_token'] ?? '')) {
-            $this->setFlash('error', 'Ongeldig verzoek (CSRF).');
+        $ontvangen = $_POST['csrf_token'] ?? '';
+        $inSessie  = $_SESSION['csrf_token'] ?? '';
+
+        $this->logger->info(
+            'Verwijderen POST: id=' . ($_POST['id'] ?? '?')
+            . ' csrf_match=' . ($ontvangen === $inSessie ? 'JA' : 'NEE')
+        );
+
+        if (!$this->valideerCsrfToken($ontvangen)) {
+            $this->logger->warning("CSRF gefaald bij verwijderen. Ontvangen: '{$ontvangen}' Sessie: '{$inSessie}'");
+            $this->setFlash('error', 'Sessie verlopen. Probeer opnieuw.');
             $this->redirect('/klanten');
         }
 
-        $id   = (int) ($_POST['id'] ?? 0);
+        $id = (int) ($_POST['id'] ?? 0);
 
         if ($id <= 0) {
             $this->setFlash('error', 'Ongeldig klant-ID.');
@@ -207,6 +216,7 @@ class KlantController extends Controller
         $fout = $this->klantModel->verwijderen($id);
 
         if ($fout !== '') {
+            $this->logger->error("Verwijderen klant id={$id} mislukt: {$fout}");
             $this->setFlash('error', $fout);
         } else {
             $this->setFlash('success', 'Klant succesvol verwijderd.');
