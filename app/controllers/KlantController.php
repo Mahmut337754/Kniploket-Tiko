@@ -28,9 +28,10 @@ class KlantController extends Controller
     public function index(): void
     {
         $this->vereisLogin();
-        $klanten = $this->klantModel->overzicht();
-        $flash   = $this->getFlash();
-        $this->view('klanten/index', compact('klanten', 'flash'));
+        $klanten   = $this->klantModel->overzicht();
+        $flash     = $this->getFlash();
+        $csrfToken = $this->genereerCsrfToken();
+        $this->view('klanten/index', compact('klanten', 'flash', 'csrfToken'));
     }
 
     // -------------------------------------------------------

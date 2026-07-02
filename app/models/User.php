@@ -9,7 +9,7 @@ use PDOException;
 
 /**
  * Model voor gebruikersbeheer en authenticatie.
- * Alle databasebewerkingen verlopen via stored procedures.
+ * Gebruikt directe PDO-queries (geen stored procedures).
  */
 class User
 {
@@ -23,14 +23,28 @@ class User
     }
 
     /**
-     * Zoek een gebruiker op e-mailadres via stored procedure.
+     * Zoek een gebruiker op e-mailadres.
      *
      * @return array<string,mixed>|null
      */
     public function vindOpEmail(string $email): ?array
     {
         try {
-            $stmt = $this->pdo->prepare('CALL sp_gebruiker_ophalen_email(:email)');
+            $sql = '
+                SELECT
+                    g.id,
+                    g.naam,
+                    g.email,
+                    g.wachtwoord,
+                    g.rol_id,
+                    g.is_actief,
+                    r.naam AS rol_naam
+                FROM `gebruikers` g
+                INNER JOIN `rollen` r ON r.id = g.rol_id
+                WHERE g.email = :email
+                LIMIT 1
+            ';
+            $stmt = $this->pdo->prepare($sql);
             $stmt->bindValue(':email', $email, PDO::PARAM_STR);
             $stmt->execute();
             $rij = $stmt->fetch();
@@ -42,14 +56,28 @@ class User
     }
 
     /**
-     * Zoek een gebruiker op ID via stored procedure.
+     * Zoek een gebruiker op ID.
      *
      * @return array<string,mixed>|null
      */
     public function vindOpId(int $id): ?array
     {
         try {
-            $stmt = $this->pdo->prepare('CALL sp_gebruiker_ophalen_id(:id)');
+            $sql = '
+                SELECT
+                    g.id,
+                    g.naam,
+                    g.email,
+                    g.wachtwoord,
+                    g.rol_id,
+                    g.is_actief,
+                    r.naam AS rol_naam
+                FROM `gebruikers` g
+                INNER JOIN `rollen` r ON r.id = g.rol_id
+                WHERE g.id = :id
+                LIMIT 1
+            ';
+            $stmt = $this->pdo->prepare($sql);
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             $rij = $stmt->fetch();
@@ -61,16 +89,17 @@ class User
     }
 
     /**
-     * Wijzig het wachtwoord van een gebruiker via stored procedure.
-     * Hash wordt hier aangemaakt zodat de SP geen plaintext ontvangt.
+     * Wijzig het wachtwoord van een gebruiker.
      */
     public function wijzigWachtwoord(int $id, string $nieuwWachtwoord): bool
     {
         try {
             $hash = password_hash($nieuwWachtwoord, PASSWORD_BCRYPT);
-            $stmt = $this->pdo->prepare('CALL sp_gebruiker_wachtwoord_wijzigen(:id, :ww)');
-            $stmt->bindValue(':id', $id,   PDO::PARAM_INT);
+            $stmt = $this->pdo->prepare(
+                'UPDATE `gebruikers` SET `wachtwoord` = :ww WHERE `id` = :id'
+            );
             $stmt->bindValue(':ww', $hash, PDO::PARAM_STR);
+            $stmt->bindValue(':id', $id,   PDO::PARAM_INT);
             $stmt->execute();
             $this->logger->info("Wachtwoord gewijzigd voor gebruiker id={$id}");
             return true;
@@ -81,13 +110,14 @@ class User
     }
 
     /**
-     * Controleer of een e-mailadres al bestaat (exclusief eigen gebruiker)
-     * via stored procedure.
+     * Controleer of een e-mailadres al bestaat (exclusief eigen gebruiker).
      */
     public function emailBestaat(string $email, int $uitsluitId = 0): bool
     {
         try {
-            $stmt = $this->pdo->prepare('CALL sp_gebruiker_email_bestaat(:email, :id)');
+            $stmt = $this->pdo->prepare(
+                'SELECT COUNT(*) AS aantal FROM `gebruikers` WHERE `email` = :email AND `id` != :id'
+            );
             $stmt->bindValue(':email', $email,      PDO::PARAM_STR);
             $stmt->bindValue(':id',    $uitsluitId, PDO::PARAM_INT);
             $stmt->execute();
