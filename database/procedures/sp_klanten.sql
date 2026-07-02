@@ -1,14 +1,14 @@
 -- =====================================================
 -- Stored procedures: klanten
+-- Importeer via phpMyAdmin: zonder DELIMITER-syntax
 -- =====================================================
 USE `kniploket_tiko`;
-
-DELIMITER $$
 
 -- ---------------------------------------------------
 -- SP: Overzicht alle klanten (JOIN gebruikers)
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_klanten_overzicht` $$
+DROP PROCEDURE IF EXISTS `sp_klanten_overzicht`;
+
 CREATE PROCEDURE `sp_klanten_overzicht`()
 BEGIN
     SELECT
@@ -24,12 +24,13 @@ BEGIN
     FROM `klanten` k
     INNER JOIN `gebruikers` g ON g.id = k.gebruiker_id
     ORDER BY g.naam ASC;
-END $$
+END;
 
 -- ---------------------------------------------------
 -- SP: Detail van één klant op basis van klant-id
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_klant_detail` $$
+DROP PROCEDURE IF EXISTS `sp_klant_detail`;
+
 CREATE PROCEDURE `sp_klant_detail`(
     IN p_klant_id INT UNSIGNED
 )
@@ -48,12 +49,13 @@ BEGIN
     INNER JOIN `gebruikers` g ON g.id = k.gebruiker_id
     WHERE k.id = p_klant_id
     LIMIT 1;
-END $$
+END;
 
 -- ---------------------------------------------------
 -- SP: Klant toevoegen (gebruiker + klant in transactie)
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_klant_toevoegen` $$
+DROP PROCEDURE IF EXISTS `sp_klant_toevoegen`;
+
 CREATE PROCEDURE `sp_klant_toevoegen`(
     IN  p_naam           VARCHAR(100),
     IN  p_email          VARCHAR(255),
@@ -76,7 +78,6 @@ BEGIN
         SET p_fout = 'Databasefout opgetreden bij aanmaken klant.';
     END;
 
-    -- Controleer uniek e-mailadres
     SELECT COUNT(*) INTO v_email_count
     FROM `gebruikers`
     WHERE `email` = p_email;
@@ -87,13 +88,11 @@ BEGIN
     ELSE
         START TRANSACTION;
 
-        -- Voeg gebruiker toe met rol 'klant' (id=3)
         INSERT INTO `gebruikers` (`naam`, `email`, `wachtwoord`, `rol_id`)
         VALUES (p_naam, p_email, p_wachtwoord, 3);
 
         SET v_gebruiker_id = LAST_INSERT_ID();
 
-        -- Voeg klantprofiel toe
         INSERT INTO `klanten` (`gebruiker_id`, `adres`, `telefoonnummer`, `allergieen`, `wensen`)
         VALUES (v_gebruiker_id, p_adres, p_telefoonnummer, p_allergieen, p_wensen);
 
@@ -102,17 +101,18 @@ BEGIN
 
         COMMIT;
     END IF;
-END $$
+END;
 
 -- ---------------------------------------------------
 -- SP: Klant wijzigen (gebruiker + klant in transactie)
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_klant_wijzigen` $$
+DROP PROCEDURE IF EXISTS `sp_klant_wijzigen`;
+
 CREATE PROCEDURE `sp_klant_wijzigen`(
     IN  p_klant_id       INT UNSIGNED,
     IN  p_naam           VARCHAR(100),
     IN  p_email          VARCHAR(255),
-    IN  p_wachtwoord     VARCHAR(255),   -- leeg = niet wijzigen
+    IN  p_wachtwoord     VARCHAR(255),
     IN  p_adres          VARCHAR(255),
     IN  p_telefoonnummer VARCHAR(20),
     IN  p_allergieen     TEXT,
@@ -129,7 +129,6 @@ BEGIN
         SET p_fout = 'Databasefout opgetreden bij wijzigen klant.';
     END;
 
-    -- Haal gebruiker_id op voor deze klant
     SELECT `gebruiker_id` INTO v_gebruiker_id
     FROM `klanten`
     WHERE `id` = p_klant_id
@@ -138,7 +137,6 @@ BEGIN
     IF v_gebruiker_id = 0 THEN
         SET p_fout = 'Klant niet gevonden.';
     ELSE
-        -- Controleer uniek e-mailadres (excl. eigen gebruiker)
         SELECT COUNT(*) INTO v_email_count
         FROM `gebruikers`
         WHERE `email` = p_email
@@ -149,20 +147,17 @@ BEGIN
         ELSE
             START TRANSACTION;
 
-            -- Update naam en e-mail
             UPDATE `gebruikers`
             SET `naam`  = p_naam,
                 `email` = p_email
             WHERE `id` = v_gebruiker_id;
 
-            -- Update wachtwoord alleen als meegegeven
             IF p_wachtwoord != '' THEN
                 UPDATE `gebruikers`
                 SET `wachtwoord` = p_wachtwoord
                 WHERE `id` = v_gebruiker_id;
             END IF;
 
-            -- Update klantprofiel
             UPDATE `klanten`
             SET `adres`          = p_adres,
                 `telefoonnummer` = p_telefoonnummer,
@@ -174,12 +169,13 @@ BEGIN
             COMMIT;
         END IF;
     END IF;
-END $$
+END;
 
 -- ---------------------------------------------------
--- SP: Klant verwijderen (cascade verwijdert gebruiker)
+-- SP: Klant verwijderen
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_klant_verwijderen` $$
+DROP PROCEDURE IF EXISTS `sp_klant_verwijderen`;
+
 CREATE PROCEDURE `sp_klant_verwijderen`(
     IN  p_klant_id INT UNSIGNED,
     OUT p_fout     VARCHAR(255)
@@ -202,26 +198,22 @@ BEGIN
         SET p_fout = 'Klant niet gevonden.';
     ELSE
         START TRANSACTION;
-
-        -- Verwijder gebruiker; klant wordt via CASCADE verwijderd
         DELETE FROM `gebruikers` WHERE `id` = v_gebruiker_id;
-
         SET p_fout = '';
         COMMIT;
     END IF;
-END $$
+END;
 
 -- ---------------------------------------------------
 -- SP: Statistieken dashboard
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_dashboard_statistieken` $$
+DROP PROCEDURE IF EXISTS `sp_dashboard_statistieken`;
+
 CREATE PROCEDURE `sp_dashboard_statistieken`()
 BEGIN
     SELECT
-        (SELECT COUNT(*) FROM `klanten`)                            AS aantal_klanten,
+        (SELECT COUNT(*) FROM `klanten`)                               AS aantal_klanten,
         (SELECT COUNT(*) FROM `afspraken` WHERE `status` = 'gepland') AS geplande_afspraken,
-        (SELECT COUNT(*) FROM `medewerkers`)                        AS aantal_medewerkers,
-        (SELECT COUNT(*) FROM `producten` WHERE `voorraad` = 0)    AS producten_uitverkocht;
-END $$
-
-DELIMITER ;
+        (SELECT COUNT(*) FROM `medewerkers`)                          AS aantal_medewerkers,
+        (SELECT COUNT(*) FROM `producten` WHERE `voorraad` = 0)       AS producten_uitverkocht;
+END;

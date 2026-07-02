@@ -1,14 +1,14 @@
 -- =====================================================
 -- Stored procedures: gebruikers
+-- Importeer via phpMyAdmin: zonder DELIMITER-syntax
 -- =====================================================
 USE `kniploket_tiko`;
-
-DELIMITER $$
 
 -- ---------------------------------------------------
 -- SP: Haal gebruiker op via e-mail (voor inloggen)
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_gebruiker_ophalen_email` $$
+DROP PROCEDURE IF EXISTS `sp_gebruiker_ophalen_email`;
+
 CREATE PROCEDURE `sp_gebruiker_ophalen_email`(
     IN p_email VARCHAR(255)
 )
@@ -25,12 +25,13 @@ BEGIN
     INNER JOIN `rollen` r ON r.id = g.rol_id
     WHERE g.email = p_email
     LIMIT 1;
-END $$
+END;
 
 -- ---------------------------------------------------
 -- SP: Haal gebruiker op via ID
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_gebruiker_ophalen_id` $$
+DROP PROCEDURE IF EXISTS `sp_gebruiker_ophalen_id`;
+
 CREATE PROCEDURE `sp_gebruiker_ophalen_id`(
     IN p_id INT UNSIGNED
 )
@@ -47,26 +48,28 @@ BEGIN
     INNER JOIN `rollen` r ON r.id = g.rol_id
     WHERE g.id = p_id
     LIMIT 1;
-END $$
+END;
 
 -- ---------------------------------------------------
 -- SP: Wijzig wachtwoord van gebruiker
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_gebruiker_wachtwoord_wijzigen` $$
+DROP PROCEDURE IF EXISTS `sp_gebruiker_wachtwoord_wijzigen`;
+
 CREATE PROCEDURE `sp_gebruiker_wachtwoord_wijzigen`(
-    IN p_id           INT UNSIGNED,
-    IN p_wachtwoord   VARCHAR(255)
+    IN p_id         INT UNSIGNED,
+    IN p_wachtwoord VARCHAR(255)
 )
 BEGIN
     UPDATE `gebruikers`
     SET `wachtwoord` = p_wachtwoord
     WHERE `id` = p_id;
-END $$
+END;
 
 -- ---------------------------------------------------
 -- SP: Controleer of e-mail al bestaat (excl. eigen id)
 -- ---------------------------------------------------
-DROP PROCEDURE IF EXISTS `sp_gebruiker_email_bestaat` $$
+DROP PROCEDURE IF EXISTS `sp_gebruiker_email_bestaat`;
+
 CREATE PROCEDURE `sp_gebruiker_email_bestaat`(
     IN p_email VARCHAR(255),
     IN p_id    INT UNSIGNED
@@ -76,6 +79,4 @@ BEGIN
     FROM `gebruikers`
     WHERE `email` = p_email
       AND `id` != p_id;
-END $$
-
-DELIMITER ;
+END;
