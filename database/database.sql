@@ -269,12 +269,15 @@ INSERT INTO `rollen` (`id`, `naam`) VALUES
     (3, 'klant');
 
 -- Gebruikers
--- Wachtwoorden (plain):  eigenaar=admin123 | medewerker=medewerker123 | klant=klant123
--- Hashes gegenereerd met password_hash('...', PASSWORD_BCRYPT)
+-- Wachtwoorden (plain):
+--   lisa@kniploket.nl   -> admin123
+--   erik@kniploket.nl   -> medewerker123
+--   sophie@example.com  -> klant123
+-- Hashes gegenereerd met password_hash('...', PASSWORD_BCRYPT, ['cost' => 12])
 INSERT INTO `gebruikers` (`id`, `naam`, `email`, `wachtwoord`, `rol_id`, `is_actief`) VALUES
-    (1, 'Lisa Jansen',   'lisa@kniploket.nl',   '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, 1),
-    (2, 'Erik de Vries', 'erik@kniploket.nl',   '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
-    (3, 'Sophie Bakker', 'sophie@example.com',  '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1);
+    (1, 'Lisa Jansen',   'lisa@kniploket.nl',   '$2y$12$KZY2twi1/ugyzNL9cD128uHbYHubd4il1ZGOltXK63jcEh/c0.wry', 1, 1),
+    (2, 'Erik de Vries', 'erik@kniploket.nl',   '$2y$12$Z/IBc9NeJm.zBSZ.bU44Y.hLlYlvCqhDjPrEIi1BL.cDrWDqPzATC', 2, 1),
+    (3, 'Sophie Bakker', 'sophie@example.com',  '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu', 3, 1);
 
 -- Klanten
 INSERT INTO `klanten` (`id`, `gebruiker_id`, `adres`, `telefoonnummer`, `allergieen`, `wensen`) VALUES
