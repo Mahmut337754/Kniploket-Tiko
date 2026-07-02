@@ -18,7 +18,7 @@ class Klant
     public function __construct()
     {
         $this->pdo    = Database::getInstance()->getPdo();
-        $this->logger = new Logger();
+        $this->logger = new Logger(dirname(__DIR__, 2) . '/logs/klanten.log');
     }
 
     /**
@@ -321,7 +321,7 @@ class Klant
                 'DELETE FROM `klanten` WHERE `id` = :id'
             )->execute([':id' => $klantId]);
 
-            // 6. Gebruikersaccount
+            // 6. Gebruikersaccount (geen cascade → expliciet verwijderen)
             $this->pdo->prepare(
                 'DELETE FROM `gebruikers` WHERE `id` = :id'
             )->execute([':id' => $gebruikerId]);
