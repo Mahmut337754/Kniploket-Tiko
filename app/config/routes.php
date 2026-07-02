@@ -32,4 +32,13 @@ return [
     'GET /klanten/wijzigen'         => ['KlantController', 'wijzigenForm'],
     'POST /klanten/wijzigen'        => ['KlantController', 'wijzigen'],
     'POST /klanten/verwijderen'     => ['KlantController', 'verwijderen'],
+
+    // Productenbeheer (alleen ingelogde medewerkers/eigenaar)
+    'GET /producten'                => ['ProductController', 'index'],
+    'GET /producten/detail'         => ['ProductController', 'detail'],
+    'GET /producten/aanmaken'       => ['ProductController', 'aanmakenForm'],
+    'POST /producten/aanmaken'      => ['ProductController', 'aanmaken'],
+    'GET /producten/wijzigen'       => ['ProductController', 'wijzigenForm'],
+    'POST /producten/wijzigen'      => ['ProductController', 'wijzigen'],
+    'POST /producten/verwijderen'   => ['ProductController', 'verwijderen'],
 ];

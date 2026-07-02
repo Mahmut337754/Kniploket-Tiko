@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Logger;
 use App\Models\Klant;
 use App\Models\Allergeen;
 
@@ -19,6 +20,9 @@ class KlantController extends Controller
         parent::__construct();
         $this->klantModel    = new Klant();
         $this->allegeenModel = new Allergeen();
+        
+        // Overschrijf logger om klanten.log te gebruiken
+        $this->logger = new Logger(dirname(__DIR__, 2) . '/logs/klanten.log');
     }
 
     // -------------------------------------------------------
@@ -52,8 +56,8 @@ class KlantController extends Controller
 
         $allergenen = $this->allegeenModel->namenVanKlant($id);
         $flash      = $this->getFlash();
-        $this->genereerCsrfToken();
-        $this->view('klanten/detail', compact('klant', 'allergenen', 'flash'));
+        $csrfToken  = $this->genereerCsrfToken();
+        $this->view('klanten/detail', compact('klant', 'allergenen', 'flash', 'csrfToken'));
     }
 
     // -------------------------------------------------------
@@ -192,17 +196,9 @@ class KlantController extends Controller
     {
         $this->vereisLogin();
 
-        $ontvangen = $_POST['csrf_token'] ?? '';
-        $inSessie  = $_SESSION['csrf_token'] ?? '';
-
-        $this->logger->info(
-            'Verwijderen POST: id=' . ($_POST['id'] ?? '?')
-            . ' csrf_match=' . ($ontvangen === $inSessie ? 'JA' : 'NEE')
-        );
-
-        if (!$this->valideerCsrfToken($ontvangen)) {
-            $this->logger->warning("CSRF gefaald bij verwijderen. Ontvangen: '{$ontvangen}' Sessie: '{$inSessie}'");
-            $this->setFlash('error', 'Sessie verlopen. Probeer opnieuw.');
+        if (!$this->valideerCsrfToken($_POST['csrf_token'] ?? '')) {
+            $this->logger->warning('CSRF gefaald bij verwijderen klant id=' . ($_POST['id'] ?? '?'));
+            $this->setFlash('error', 'Sessie verlopen. Probeer de pagina te herladen.');
             $this->redirect('/klanten');
         }
 
@@ -217,8 +213,9 @@ class KlantController extends Controller
 
         if ($fout !== '') {
             $this->logger->error("Verwijderen klant id={$id} mislukt: {$fout}");
-            $this->setFlash('error', $fout);
+            $this->setFlash('error', 'Verwijderen mislukt: ' . $fout);
         } else {
+            $this->logger->info("Klant id={$id} succesvol verwijderd.");
             $this->setFlash('success', 'Klant succesvol verwijderd.');
         }
 

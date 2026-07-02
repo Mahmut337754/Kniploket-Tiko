@@ -167,6 +167,9 @@
         .card { border: 1px solid #e2e8f0; border-radius: .75rem; }
         .card-header { border-radius: .75rem .75rem 0 0 !important; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmKi69h56ECk3jM28efF/xWv1os0X"
+            crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -218,9 +221,8 @@
     <a href="<?= $base ?>/klanten" class="sidebar-link <?= $isActief('/klanten') ?>">
         <i class="bi bi-people"></i> Klanten
     </a>
-    <a href="#" class="sidebar-link" style="opacity:.5;cursor:default;" tabindex="-1">
+    <a href="<?= $base ?>/producten" class="sidebar-link <?= $isActief('/producten') ?>">
         <i class="bi bi-box-seam"></i> Producten
-        <span class="badge bg-secondary">binnenkort</span>
     </a>
 
     <div class="sidebar-section">Account</div>

@@ -341,14 +341,14 @@ INSERT INTO `rollen` (`id`, `naam`) VALUES
 --   thomas.kl@example.com    -> Klant123
 -- Hashes gegenereerd met password_hash('...', PASSWORD_BCRYPT, ['cost' => 12])
 INSERT INTO `gebruikers` (`id`, `naam`, `email`, `wachtwoord`, `rol_id`, `is_actief`) VALUES
-    (1, 'Lisa Jansen',       'lisa@kniploket.nl',          '$2y$12$KZY2twi1/ugyzNL9cD128uHbYHubd4il1ZGOltXK63jcEh/c0.wry', 1, 1),
-    (2, 'Erik de Vries',     'erik@kniploket.nl',          '$2y$12$Z/IBc9NeJm.zBSZ.bU44Y.hLlYlvCqhDjPrEIi1BL.cDrWDqPzATC', 2, 1),
-    (3, 'Sophie Bakker',     'sophie@example.com',         '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
-    (4, 'Jan de Vries',      'jan.devries@example.com',    '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
-    (5, 'Fatima Yilmaz',     'fatima.yilmaz@example.com',  '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
-    (6, 'Marco Smit',        'marco.smit@example.com',     '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
-    (7, 'Anna van den Berg', 'anna.berg@example.com',      '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
-    (8, 'Thomas Kleijn',     'thomas.kl@example.com',      '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 0);
+    (1, 'Lisa Jansen',       'lisa@kniploket.nl',          '$2y$12$zFNJcGSjm.AN4w0aQ4OwkeIhAfr4yReveZrFSwBmsuEXDMqY58kB.', 1, 1),
+    (2, 'Erik de Vries',     'erik@kniploket.nl',          '$2y$12$cwQT7/J7Uybt2PxxYXYz8OpgMviy3MUk2RaJgSmy6YWG7d1XPemBq', 2, 1),
+    (3, 'Sophie Bakker',     'sophie@example.com',         '$2y$12$EhJMK8OXaWX8Ni4zs62y2O4O5L.glSWwzrFxDabtj7YL2NZvCbryC', 3, 1),
+    (4, 'Jan de Vries',      'jan.devries@example.com',    '$2y$12$EhJMK8OXaWX8Ni4zs62y2O4O5L.glSWwzrFxDabtj7YL2NZvCbryC', 3, 1),
+    (5, 'Fatima Yilmaz',     'fatima.yilmaz@example.com',  '$2y$12$EhJMK8OXaWX8Ni4zs62y2O4O5L.glSWwzrFxDabtj7YL2NZvCbryC', 3, 1),
+    (6, 'Marco Smit',        'marco.smit@example.com',     '$2y$12$EhJMK8OXaWX8Ni4zs62y2O4O5L.glSWwzrFxDabtj7YL2NZvCbryC', 3, 1),
+    (7, 'Anna van den Berg', 'anna.berg@example.com',      '$2y$12$EhJMK8OXaWX8Ni4zs62y2O4O5L.glSWwzrFxDabtj7YL2NZvCbryC', 3, 1),
+    (8, 'Thomas Kleijn',     'thomas.kl@example.com',      '$2y$12$EhJMK8OXaWX8Ni4zs62y2O4O5L.glSWwzrFxDabtj7YL2NZvCbryC', 3, 0);
 
 -- Klanten (allergieen kolom is verwijderd — allergenen staan in klant_allergenen)
 INSERT INTO `klanten` (`id`, `gebruiker_id`, `adres`, `telefoonnummer`, `wensen`) VALUES
