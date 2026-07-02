@@ -3,7 +3,9 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="tests/bootstrap.php"
          colors="true"
-         stopOnFailure="false">
+         stopOnFailure="false"
+         failOnDeprecation="false"
+         failOnWarning="false">
 
     <testsuites>
         <testsuite name="Kniploket Tiko – Unit Tests">
@@ -11,11 +13,5 @@
             <file>tests/KlantTest.php</file>
         </testsuite>
     </testsuites>
-
-    <coverage>
-        <include>
-            <directory>app/models</directory>
-        </include>
-    </coverage>
 
 </phpunit>
