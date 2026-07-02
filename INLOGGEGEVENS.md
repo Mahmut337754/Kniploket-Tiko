@@ -6,19 +6,19 @@ Gebruik deze inloggegevens om het systeem te testen:
 
 ### 1. Eigenaar (volledige toegang)
 - **E-mail**: `lisa@kniploket.nl`
-- **Wachtwoord**: `admin123`
+- **Wachtwoord**: `Admin123`
 - **Rol**: eigenaar
 
 ### 2. Medewerker
 - **E-mail**: `erik@kniploket.nl`
-- **Wachtwoord**: `medewerker123`
+- **Wachtwoord**: `Medew123`
 - **Rol**: medewerker
 
 ### 3. Klant (kan niet inloggen op beheerpaneel)
 - **E-mail**: `sophie@example.com`
-- **Wachtwoord**: `klant123`
+- **Wachtwoord**: `Klant123`
 - **Rol**: klant
-- **Let op**: Klanten loggen NIET in op het beheerpaneel. Deze account bestaat alleen in de database voor toekomstige klantportaal-functionaliteit.
+- **Let op**: Klanten loggen NIET in op het beheerpaneel.
 
 ---
 

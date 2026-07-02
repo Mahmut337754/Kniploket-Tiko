@@ -331,18 +331,52 @@ INSERT INTO `rollen` (`id`, `naam`) VALUES
 
 -- Gebruikers
 -- Wachtwoorden (plain):
---   lisa@kniploket.nl   -> admin123
---   erik@kniploket.nl   -> medewerker123
---   sophie@example.com  -> klant123
+--   lisa@kniploket.nl        -> Admin123
+--   erik@kniploket.nl        -> Medew123
+--   sophie@example.com       -> Klant123
+--   jan.devries@example.com  -> Klant123
+--   fatima.yilmaz@example.com-> Klant123
+--   marco.smit@example.com   -> Klant123
+--   anna.berg@example.com    -> Klant123
+--   thomas.kl@example.com    -> Klant123
 -- Hashes gegenereerd met password_hash('...', PASSWORD_BCRYPT, ['cost' => 12])
 INSERT INTO `gebruikers` (`id`, `naam`, `email`, `wachtwoord`, `rol_id`, `is_actief`) VALUES
-    (1, 'Lisa Jansen',   'lisa@kniploket.nl',   '$2y$12$KZY2twi1/ugyzNL9cD128uHbYHubd4il1ZGOltXK63jcEh/c0.wry', 1, 1),
-    (2, 'Erik de Vries', 'erik@kniploket.nl',   '$2y$12$Z/IBc9NeJm.zBSZ.bU44Y.hLlYlvCqhDjPrEIi1BL.cDrWDqPzATC', 2, 1),
-    (3, 'Sophie Bakker', 'sophie@example.com',  '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu', 3, 1);
+    (1, 'Lisa Jansen',       'lisa@kniploket.nl',          '$2y$12$KZY2twi1/ugyzNL9cD128uHbYHubd4il1ZGOltXK63jcEh/c0.wry', 1, 1),
+    (2, 'Erik de Vries',     'erik@kniploket.nl',          '$2y$12$Z/IBc9NeJm.zBSZ.bU44Y.hLlYlvCqhDjPrEIi1BL.cDrWDqPzATC', 2, 1),
+    (3, 'Sophie Bakker',     'sophie@example.com',         '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
+    (4, 'Jan de Vries',      'jan.devries@example.com',    '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
+    (5, 'Fatima Yilmaz',     'fatima.yilmaz@example.com',  '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
+    (6, 'Marco Smit',        'marco.smit@example.com',     '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
+    (7, 'Anna van den Berg', 'anna.berg@example.com',      '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 1),
+    (8, 'Thomas Kleijn',     'thomas.kl@example.com',      '$2y$12$PPygEluaXCStdE8loxJkruJZuDZ7NAkQ6b27A1NQtvgdCO2l2voCu',  3, 0);
 
--- Klanten
-INSERT INTO `klanten` (`id`, `gebruiker_id`, `adres`, `telefoonnummer`, `allergieen`, `wensen`) VALUES
-    (1, 3, 'Hoofdstraat 12, 1234 AB Stad', '0612345678', 'Allergisch voor ammoniak', 'Houdt van natuurlijke producten');
+-- Klanten (allergieen kolom is verwijderd — allergenen staan in klant_allergenen)
+INSERT INTO `klanten` (`id`, `gebruiker_id`, `adres`, `telefoonnummer`, `wensen`) VALUES
+    (1, 3, 'Hoofdstraat 12, 1234 AB Amsterdam',     '0612345678', 'Houdt van natuurlijke producten'),
+    (2, 4, 'Kerkstraat 45, 2000 BC Rotterdam',       '0687654321', 'Kort knippen aan de zijkanten'),
+    (3, 5, 'Dorpsweg 7, 3500 CD Utrecht',            '+31698765432','Voorkeur voor ammoniakvrije verf'),
+    (4, 6, 'Lindelaan 3, 4000 DE Den Haag',          '020-1234567', 'Wil graag tips voor haar thuis'),
+    (5, 7, 'Molenlaan 99, 5000 EF Eindhoven',        '0651234567',  'Altijd blowdry na de behandeling'),
+    (6, 8, 'Parkweg 22, 6000 FG Maastricht',         '043-9876543', NULL);
+
+-- Klant allergenen (koppeltabel)
+-- Sophie: ammoniak + parfum
+INSERT INTO `klant_allergenen` (`klant_id`, `allergeen_id`) VALUES
+    (1, 15), -- Ammoniak
+    (1, 19); -- Parfum / Geurstoffen
+-- Jan: geen
+-- Fatima: PPD + resorcinol
+INSERT INTO `klant_allergenen` (`klant_id`, `allergeen_id`) VALUES
+    (3, 17), -- PPD
+    (3, 18); -- Resorcinol
+-- Marco: latex + nickel
+INSERT INTO `klant_allergenen` (`klant_id`, `allergeen_id`) VALUES
+    (4, 24), -- Latex
+    (4, 25); -- Nickel
+-- Anna: gluten + melk (cosmetica-ingrediënten)
+INSERT INTO `klant_allergenen` (`klant_id`, `allergeen_id`) VALUES
+    (5, 1),  -- Gluten
+    (5, 7);  -- Melk / Lactose
 
 -- Medewerkers
 INSERT INTO `medewerkers` (`id`, `gebruiker_id`) VALUES
@@ -389,7 +423,10 @@ INSERT INTO `behandeling_producten` (`behandeling_id`,`product_id`,`aantal_benod
 -- Afspraken
 INSERT INTO `afspraken` (`id`,`klant_id`,`medewerker_id`,`behandeling_id`,`datum`,`starttijd`,`eindtijd`,`status`) VALUES
     (1,1,1,1,'2026-07-06','09:00','10:00','gepland'),
-    (2,1,1,3,'2026-07-08','11:00','12:30','gepland');
+    (2,1,1,3,'2026-07-08','11:00','12:30','gepland'),
+    (3,2,2,2,'2026-07-07','10:00','10:30','gepland'),
+    (4,3,1,3,'2026-07-09','13:00','14:30','gepland'),
+    (5,4,2,4,'2026-07-10','14:00','14:45','gepland');
 
 -- Bestellingen
 INSERT INTO `bestellingen` (`id`,`klant_id`,`orderdatum`,`verwachte_leverdatum`,`status`) VALUES

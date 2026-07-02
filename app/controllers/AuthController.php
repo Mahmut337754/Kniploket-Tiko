@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         $csrfToken = $this->genereerCsrfToken();
         $flash     = $this->getFlash();
-        $this->view('auth/login', compact('csrfToken', 'flash'));
+        $this->view('auth/login', compact('csrfToken', 'flash'), 'layouts/public');
     }
 
     /** Verwerk het ingediende inlogformulier. */

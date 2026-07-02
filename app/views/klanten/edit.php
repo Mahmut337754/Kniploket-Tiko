@@ -95,11 +95,11 @@
                             <label for="telefoonnummer" class="form-label fw-semibold">Telefoonnummer</label>
                             <input type="tel" class="form-control" id="telefoonnummer"
                                 name="telefoonnummer" maxlength="20"
-                                pattern="^\+?[\d\s\-\(\)]{7,20}$"
-                                placeholder="bijv. 0612345678"
+                                pattern="^(\+?[0-9][\d\s\-\.\(\)]{6,18})$"
+                                placeholder="bijv. 0612345678 of 020-1234567"
                                 value="<?= htmlspecialchars($formData['telefoonnummer'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
                             <div class="invalid-feedback">
-                                Voer een geldig telefoonnummer in.
+                                Voer een geldig telefoonnummer in (bijv. 0612345678, 020-1234567 of +31612345678).
                             </div>
                         </div>
 

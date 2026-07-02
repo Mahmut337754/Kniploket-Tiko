@@ -92,7 +92,17 @@ class KlantController extends Controller
         $resultaat = $this->klantModel->aanmaken($data);
 
         if ($resultaat['fout'] !== '') {
-            $this->setFlash('error', $resultaat['fout']);
+            // Geef specifieke foutmelding bij dubbel e-mailadres
+            if (str_contains($resultaat['fout'], 'E-mailadres')) {
+                $rol = $_SESSION['rol'] ?? 'medewerker';
+                $melding = ($rol === 'eigenaar' || $rol === 'medewerker')
+                    ? 'Het e-mailadres <strong>' . htmlspecialchars($data['email'], ENT_QUOTES, 'UTF-8')
+                      . '</strong> is al in gebruik door een andere gebruiker in het systeem.'
+                    : $resultaat['fout'];
+                $this->setFlash('error', $melding);
+            } else {
+                $this->setFlash('error', $resultaat['fout']);
+            }
             $_SESSION['form_data'] = $data;
             $this->redirect('/klanten/aanmaken');
         }
@@ -158,7 +168,13 @@ class KlantController extends Controller
         $fout = $this->klantModel->wijzigen($id, $data);
 
         if ($fout !== '') {
-            $this->setFlash('error', $fout);
+            if (str_contains($fout, 'E-mailadres')) {
+                $melding = 'Het e-mailadres <strong>' . htmlspecialchars($data['email'], ENT_QUOTES, 'UTF-8')
+                    . '</strong> is al in gebruik door een andere gebruiker in het systeem.';
+                $this->setFlash('error', $melding);
+            } else {
+                $this->setFlash('error', $fout);
+            }
             $_SESSION['form_data'] = $data;
             $this->redirect("/klanten/wijzigen?id={$id}");
         }
@@ -265,9 +281,27 @@ class KlantController extends Controller
 
         // --- Telefoonnummer ---
         if ($data['telefoonnummer'] !== '') {
-            $telClean = preg_replace('/[\s\-\(\)]/', '', $data['telefoonnummer']);
-            if (!preg_match('/^\+?[0-9]{7,15}$/', $telClean)) {
-                $fouten[] = '<strong>Telefoonnummer</strong> is ongeldig (bijv. 0612345678 of +31612345678).';
+            // Normaliseer: verwijder spaties, koppeltekens, haakjes
+            $telClean = preg_replace('/[\s\-\.\(\)]/', '', $data['telefoonnummer']);
+
+            $geldig = false;
+
+            // NL mobiel: 06 + 8 cijfers (bijv. 0612345678)
+            if (preg_match('/^06[0-9]{8}$/', $telClean)) {
+                $geldig = true;
+            }
+            // NL vast: 0[1-9] + 7-8 cijfers (bijv. 0201234567, 0301234567)
+            elseif (preg_match('/^0[1-9][0-9]{7,8}$/', $telClean)) {
+                $geldig = true;
+            }
+            // Internationaal: + gevolgd door 7-14 cijfers (bijv. +31612345678)
+            elseif (preg_match('/^\+[1-9][0-9]{6,13}$/', $telClean)) {
+                $geldig = true;
+            }
+
+            if (!$geldig) {
+                $fouten[] = '<strong>Telefoonnummer</strong> is ongeldig. '
+                    . 'Gebruik bijv. <code>0612345678</code>, <code>020-1234567</code> of <code>+31612345678</code>.';
             }
         }
 

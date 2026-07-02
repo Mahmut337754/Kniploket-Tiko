@@ -7,18 +7,24 @@
  */
 
 return [
+    // Homepagina (publiek)
+    'GET /'                         => ['HomeController', 'index'],
+
     // Authenticatie
-    'GET /'                         => ['AuthController', 'loginForm'],
     'GET /login'                    => ['AuthController', 'loginForm'],
     'POST /login'                   => ['AuthController', 'login'],
     'GET /logout'                   => ['AuthController', 'logout'],
     'GET /wachtwoord-wijzigen'      => ['AuthController', 'wachtwoordWijzigenForm'],
     'POST /wachtwoord-wijzigen'     => ['AuthController', 'wachtwoordWijzigen'],
 
+    // Publieke klantregistratie
+    'GET /registreren'              => ['RegistratieController', 'registrerenForm'],
+    'POST /registreren'             => ['RegistratieController', 'registreren'],
+
     // Dashboard
     'GET /dashboard'                => ['DashboardController', 'index'],
 
-    // Klantenbeheer
+    // Klantenbeheer (alleen ingelogde medewerkers/eigenaar)
     'GET /klanten'                  => ['KlantController', 'index'],
     'GET /klanten/detail'           => ['KlantController', 'detail'],
     'GET /klanten/aanmaken'         => ['KlantController', 'aanmakenForm'],
