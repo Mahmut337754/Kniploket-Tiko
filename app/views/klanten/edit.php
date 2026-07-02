@@ -16,10 +16,10 @@
 
         <!-- Actieknoppen -->
         <div class="d-flex gap-2 mb-4">
-            <a href="/klanten/detail?id=<?= (int)$klant['id'] ?>" class="btn btn-outline-info">
+            <a href="<?= $base ?>/klanten/detail?id=<?= (int)$klant['id'] ?>" class="btn btn-outline-info">
                 <i class="bi bi-person-lines-fill me-1"></i>Details
             </a>
-            <a href="/klanten/wijzigen?id=<?= (int)$klant['id'] ?>" class="btn btn-primary">
+            <a href="<?= $base ?>/klanten/wijzigen?id=<?= (int)$klant['id'] ?>" class="btn btn-primary">
                 <i class="bi bi-pencil me-1"></i>Wijzigen
             </a>
             <button type="button" class="btn btn-outline-danger" id="verwijderBtn">
@@ -147,7 +147,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check-lg me-1"></i>Wijzigingen opslaan
                         </button>
-                        <a href="/klanten/detail?id=<?= (int)$klant['id'] ?>"
+                        <a href="<?= $base ?>/klanten/detail?id=<?= (int)$klant['id'] ?>"
                            class="btn btn-outline-secondary">Annuleren</a>
                     </div>
                 </form>
@@ -174,7 +174,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
-                <form method="POST" action="<?= url('/klanten/verwijderen') ?>">
+                <form method="POST" action="<?= $base ?>/klanten/verwijderen">
                     <input type="hidden" name="csrf_token"
                         value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="id" value="<?= (int)$klant['id'] ?>">
