@@ -24,7 +24,9 @@ abstract class Controller
      */
     protected function view(string $view, array $data = [], string $layout = 'layouts/main'): void
     {
-        // Stel variabelen beschikbaar in de view
+        // Voeg base-pad toe zodat alle views url() en $base kunnen gebruiken
+        $data['base'] = defined('BASE_URL') ? BASE_URL : '';
+
         extract($data, EXTR_SKIP);
 
         $viewBestand   = dirname(__DIR__) . '/views/' . $view . '.php';
@@ -35,12 +37,10 @@ abstract class Controller
             die("View '{$view}' niet gevonden.");
         }
 
-        // Render de view-inhoud naar een buffer
         ob_start();
         require $viewBestand;
         $inhoud = ob_get_clean();
 
-        // Render de layout met de view-inhoud erin
         require $layoutBestand;
     }
 
@@ -111,7 +111,17 @@ abstract class Controller
      */
     protected function valideerCsrfToken(string $token): bool
     {
-        return isset($_SESSION['csrf_token'])
-            && hash_equals($_SESSION['csrf_token'], $token);
+        if (empty($token) || empty($_SESSION['csrf_token'])) {
+            return false;
+        }
+        return hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    /**
+     * Geeft het base-pad terug (bijv. /Examen/public of leeg).
+     */
+    protected function basePad(): string
+    {
+        return defined('BASE_URL') ? BASE_URL : '';
     }
 }
