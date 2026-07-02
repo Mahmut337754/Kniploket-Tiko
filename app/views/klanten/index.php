@@ -47,6 +47,11 @@
                         <?php endif; ?>
                     </td>
                     <td class="text-end">
+                        <a href="/klanten/detail?id=<?= (int) $klant['id'] ?>"
+                           class="btn btn-sm btn-outline-info me-1"
+                           title="Details">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </a>
                         <a href="/klanten/wijzigen?id=<?= (int) $klant['id'] ?>"
                            class="btn btn-sm btn-outline-primary me-1"
                            title="Wijzigen">

@@ -32,6 +32,28 @@ class KlantController extends Controller
     }
 
     // -------------------------------------------------------
+    // Detail
+    // -------------------------------------------------------
+
+    /** Toon de detailpagina van één klant. */
+    public function detail(): void
+    {
+        $this->vereisLogin();
+
+        $id    = (int) ($_GET['id'] ?? 0);
+        $klant = $this->klantModel->vindOpId($id);
+
+        if ($klant === null) {
+            $this->setFlash('error', 'Klant niet gevonden.');
+            $this->redirect('/klanten');
+        }
+
+        $flash = $this->getFlash();
+        $this->genereerCsrfToken(); // zorg dat token beschikbaar is voor verwijder-modaal
+        $this->view('klanten/detail', compact('klant', 'flash'));
+    }
+
+    // -------------------------------------------------------
     // Aanmaken
     // -------------------------------------------------------
 

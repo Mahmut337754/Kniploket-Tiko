@@ -9,6 +9,7 @@ use PDOException;
 
 /**
  * Model voor gebruikersbeheer en authenticatie.
+ * Alle databasebewerkingen verlopen via stored procedures.
  */
 class User
 {
@@ -60,7 +61,8 @@ class User
     }
 
     /**
-     * Wijzig het wachtwoord van een gebruiker.
+     * Wijzig het wachtwoord van een gebruiker via stored procedure.
+     * Hash wordt hier aangemaakt zodat de SP geen plaintext ontvangt.
      */
     public function wijzigWachtwoord(int $id, string $nieuwWachtwoord): bool
     {
@@ -79,7 +81,8 @@ class User
     }
 
     /**
-     * Controleer of een e-mailadres al bestaat (exclusief eigen gebruiker).
+     * Controleer of een e-mailadres al bestaat (exclusief eigen gebruiker)
+     * via stored procedure.
      */
     public function emailBestaat(string $email, int $uitsluitId = 0): bool
     {

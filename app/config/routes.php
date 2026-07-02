@@ -20,6 +20,7 @@ return [
 
     // Klantenbeheer
     'GET /klanten'                  => ['KlantController', 'index'],
+    'GET /klanten/detail'           => ['KlantController', 'detail'],
     'GET /klanten/aanmaken'         => ['KlantController', 'aanmakenForm'],
     'POST /klanten/aanmaken'        => ['KlantController', 'aanmaken'],
     'GET /klanten/wijzigen'         => ['KlantController', 'wijzigenForm'],

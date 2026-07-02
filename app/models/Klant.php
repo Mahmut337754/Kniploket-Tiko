@@ -22,7 +22,7 @@ class Klant
     }
 
     /**
-     * Geeft alle klanten terug (JOIN met gebruikers).
+     * Geeft alle klanten terug (JOIN met gebruikers) via stored procedure.
      *
      * @return array<int, array<string,mixed>>
      */
@@ -39,7 +39,7 @@ class Klant
     }
 
     /**
-     * Geeft één klant op basis van klant-id.
+     * Geeft één klant op basis van klant-id via stored procedure.
      *
      * @return array<string,mixed>|null
      */
@@ -58,7 +58,7 @@ class Klant
     }
 
     /**
-     * Voeg een nieuwe klant toe.
+     * Voeg een nieuwe klant toe via stored procedure.
      *
      * @param  array<string,string> $data Velden: naam, email, wachtwoord, adres, telefoonnummer, allergieen, wensen
      * @return array{id:int, fout:string}
@@ -70,13 +70,13 @@ class Klant
 
             $sql = 'CALL sp_klant_toevoegen(:naam, :email, :ww, :adres, :tel, :all, :wens, @nieuw_id, @fout)';
             $stmt = $this->pdo->prepare($sql);
-            $stmt->bindValue(':naam',  $data['naam'],          PDO::PARAM_STR);
-            $stmt->bindValue(':email', $data['email'],         PDO::PARAM_STR);
-            $stmt->bindValue(':ww',    $hash,                  PDO::PARAM_STR);
-            $stmt->bindValue(':adres', $data['adres'] ?? '',   PDO::PARAM_STR);
-            $stmt->bindValue(':tel',   $data['telefoonnummer'] ?? '', PDO::PARAM_STR);
-            $stmt->bindValue(':all',   $data['allergieen'] ?? '',     PDO::PARAM_STR);
-            $stmt->bindValue(':wens',  $data['wensen'] ?? '',         PDO::PARAM_STR);
+            $stmt->bindValue(':naam',  $data['naam'],                  PDO::PARAM_STR);
+            $stmt->bindValue(':email', $data['email'],                 PDO::PARAM_STR);
+            $stmt->bindValue(':ww',    $hash,                          PDO::PARAM_STR);
+            $stmt->bindValue(':adres', $data['adres'] ?? '',           PDO::PARAM_STR);
+            $stmt->bindValue(':tel',   $data['telefoonnummer'] ?? '',  PDO::PARAM_STR);
+            $stmt->bindValue(':all',   $data['allergieen'] ?? '',      PDO::PARAM_STR);
+            $stmt->bindValue(':wens',  $data['wensen'] ?? '',          PDO::PARAM_STR);
             $stmt->execute();
 
             // Haal OUT-parameters op
@@ -98,7 +98,7 @@ class Klant
     }
 
     /**
-     * Wijzig een bestaande klant.
+     * Wijzig een bestaande klant via stored procedure.
      *
      * @param  int                  $klantId
      * @param  array<string,string> $data
@@ -115,14 +115,14 @@ class Klant
 
             $sql = 'CALL sp_klant_wijzigen(:id, :naam, :email, :ww, :adres, :tel, :all, :wens, @fout)';
             $stmt = $this->pdo->prepare($sql);
-            $stmt->bindValue(':id',    $klantId,                  PDO::PARAM_INT);
-            $stmt->bindValue(':naam',  $data['naam'],             PDO::PARAM_STR);
-            $stmt->bindValue(':email', $data['email'],            PDO::PARAM_STR);
-            $stmt->bindValue(':ww',    $hash,                     PDO::PARAM_STR);
-            $stmt->bindValue(':adres', $data['adres'] ?? '',      PDO::PARAM_STR);
+            $stmt->bindValue(':id',    $klantId,                      PDO::PARAM_INT);
+            $stmt->bindValue(':naam',  $data['naam'],                 PDO::PARAM_STR);
+            $stmt->bindValue(':email', $data['email'],                PDO::PARAM_STR);
+            $stmt->bindValue(':ww',    $hash,                         PDO::PARAM_STR);
+            $stmt->bindValue(':adres', $data['adres'] ?? '',          PDO::PARAM_STR);
             $stmt->bindValue(':tel',   $data['telefoonnummer'] ?? '', PDO::PARAM_STR);
-            $stmt->bindValue(':all',   $data['allergieen'] ?? '', PDO::PARAM_STR);
-            $stmt->bindValue(':wens',  $data['wensen'] ?? '',     PDO::PARAM_STR);
+            $stmt->bindValue(':all',   $data['allergieen'] ?? '',     PDO::PARAM_STR);
+            $stmt->bindValue(':wens',  $data['wensen'] ?? '',         PDO::PARAM_STR);
             $stmt->execute();
 
             $res  = $this->pdo->query('SELECT @fout AS fout')->fetch();
@@ -142,7 +142,7 @@ class Klant
     }
 
     /**
-     * Verwijder een klant (en bijbehorende gebruiker via CASCADE).
+     * Verwijder een klant (en bijbehorende gebruiker via CASCADE) via stored procedure.
      *
      * @return string Lege string bij succes, foutmelding bij fout
      */
@@ -170,7 +170,7 @@ class Klant
     }
 
     /**
-     * Haal dashboardstatistieken op.
+     * Haal dashboardstatistieken op via stored procedure.
      *
      * @return array<string,int>
      */
