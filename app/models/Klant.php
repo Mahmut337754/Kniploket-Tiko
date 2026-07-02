@@ -8,12 +8,12 @@ use PDO;
 use PDOException;
 
 /**
- * Model voor klantenbeheer (CRUD via stored procedures).
+ * Model voor klantenbeheer (CRUD via directe PDO-queries met prepared statements).
  */
 class Klant
 {
-    private PDO    $pdo;
-    private Logger $logger;
+    private PDO      $pdo;
+    private Logger   $logger;
 
     public function __construct()
     {
@@ -22,14 +22,28 @@ class Klant
     }
 
     /**
-     * Geeft alle klanten terug (JOIN met gebruikers) via stored procedure.
+     * Geeft alle klanten terug (JOIN met gebruikers).
      *
      * @return array<int, array<string,mixed>>
      */
     public function overzicht(): array
     {
         try {
-            $stmt = $this->pdo->prepare('CALL sp_klanten_overzicht()');
+            $sql = '
+                SELECT
+                    k.id,
+                    g.naam,
+                    g.email,
+                    k.telefoonnummer,
+                    k.adres,
+                    k.wensen,
+                    g.is_actief,
+                    g.aangemaakt_op
+                FROM `klanten` k
+                INNER JOIN `gebruikers` g ON g.id = k.gebruiker_id
+                ORDER BY g.naam ASC
+            ';
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll();
         } catch (PDOException $e) {
@@ -39,14 +53,29 @@ class Klant
     }
 
     /**
-     * Geeft één klant op basis van klant-id via stored procedure.
+     * Geeft één klant op basis van klant-id.
      *
      * @return array<string,mixed>|null
      */
     public function vindOpId(int $klantId): ?array
     {
         try {
-            $stmt = $this->pdo->prepare('CALL sp_klant_detail(:id)');
+            $sql = '
+                SELECT
+                    k.id,
+                    k.gebruiker_id,
+                    g.naam,
+                    g.email,
+                    k.telefoonnummer,
+                    k.adres,
+                    k.wensen,
+                    g.is_actief
+                FROM `klanten` k
+                INNER JOIN `gebruikers` g ON g.id = k.gebruiker_id
+                WHERE k.id = :id
+                LIMIT 1
+            ';
+            $stmt = $this->pdo->prepare($sql);
             $stmt->bindValue(':id', $klantId, PDO::PARAM_INT);
             $stmt->execute();
             $rij = $stmt->fetch();
@@ -58,126 +87,237 @@ class Klant
     }
 
     /**
-     * Voeg een nieuwe klant toe via stored procedure.
+     * Voeg een nieuwe klant toe (gebruiker + klant in transactie).
      *
-     * @param  array<string,string> $data Velden: naam, email, wachtwoord, adres, telefoonnummer, allergieen, wensen
+     * @param  array<string,mixed> $data
      * @return array{id:int, fout:string}
      */
     public function aanmaken(array $data): array
     {
         try {
-            $hash = password_hash($data['wachtwoord'], PASSWORD_BCRYPT);
-
-            $sql = 'CALL sp_klant_toevoegen(:naam, :email, :ww, :adres, :tel, :all, :wens, @nieuw_id, @fout)';
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->bindValue(':naam',  $data['naam'],                  PDO::PARAM_STR);
-            $stmt->bindValue(':email', $data['email'],                 PDO::PARAM_STR);
-            $stmt->bindValue(':ww',    $hash,                          PDO::PARAM_STR);
-            $stmt->bindValue(':adres', $data['adres'] ?? '',           PDO::PARAM_STR);
-            $stmt->bindValue(':tel',   $data['telefoonnummer'] ?? '',  PDO::PARAM_STR);
-            $stmt->bindValue(':all',   $data['allergieen'] ?? '',      PDO::PARAM_STR);
-            $stmt->bindValue(':wens',  $data['wensen'] ?? '',          PDO::PARAM_STR);
-            $stmt->execute();
-
-            // Haal OUT-parameters op
-            $res  = $this->pdo->query('SELECT @nieuw_id AS id, @fout AS fout')->fetch();
-            $id   = (int)($res['id']   ?? 0);
-            $fout = (string)($res['fout'] ?? '');
-
-            if ($fout === '') {
-                $this->logger->info("Klant aangemaakt met id={$id}");
-            } else {
-                $this->logger->warning("Klant aanmaken mislukt: {$fout}");
+            // Controleer uniek e-mailadres
+            $check = $this->pdo->prepare(
+                'SELECT COUNT(*) AS aantal FROM `gebruikers` WHERE `email` = :email'
+            );
+            $check->bindValue(':email', $data['email'], PDO::PARAM_STR);
+            $check->execute();
+            if ((int)$check->fetch()['aantal'] > 0) {
+                return ['id' => 0, 'fout' => 'E-mailadres is al in gebruik.'];
             }
 
-            return ['id' => $id, 'fout' => $fout];
+            $hash = password_hash($data['wachtwoord'], PASSWORD_BCRYPT);
+
+            $this->pdo->beginTransaction();
+
+            // Voeg gebruiker in (rol 'klant' = id 3)
+            $sqlGebr = '
+                INSERT INTO `gebruikers` (`naam`, `email`, `wachtwoord`, `rol_id`)
+                VALUES (:naam, :email, :ww, 3)
+            ';
+            $stmtGebr = $this->pdo->prepare($sqlGebr);
+            $stmtGebr->bindValue(':naam',  $data['naam'],  PDO::PARAM_STR);
+            $stmtGebr->bindValue(':email', $data['email'], PDO::PARAM_STR);
+            $stmtGebr->bindValue(':ww',    $hash,          PDO::PARAM_STR);
+            $stmtGebr->execute();
+
+            $gebruikerId = (int) $this->pdo->lastInsertId();
+
+            // Voeg klantprofiel in
+            $sqlKlant = '
+                INSERT INTO `klanten` (`gebruiker_id`, `adres`, `telefoonnummer`, `wensen`)
+                VALUES (:gebruiker_id, :adres, :tel, :wens)
+            ';
+            $stmtKlant = $this->pdo->prepare($sqlKlant);
+            $stmtKlant->bindValue(':gebruiker_id', $gebruikerId,               PDO::PARAM_INT);
+            $stmtKlant->bindValue(':adres',        $data['adres'] ?? '',        PDO::PARAM_STR);
+            $stmtKlant->bindValue(':tel',          $data['telefoonnummer'] ?? '', PDO::PARAM_STR);
+            $stmtKlant->bindValue(':wens',         $data['wensen'] ?? '',       PDO::PARAM_STR);
+            $stmtKlant->execute();
+
+            $klantId = (int) $this->pdo->lastInsertId();
+
+            // Sla allergenen op
+            $allergenenIds = $data['allergenen'] ?? [];
+            if (!empty($allergenenIds)) {
+                $ins = $this->pdo->prepare(
+                    'INSERT INTO `klant_allergenen` (`klant_id`, `allergeen_id`) VALUES (:kid, :aid)'
+                );
+                foreach ($allergenenIds as $aid) {
+                    $ins->bindValue(':kid', $klantId,   PDO::PARAM_INT);
+                    $ins->bindValue(':aid', (int)$aid,  PDO::PARAM_INT);
+                    $ins->execute();
+                }
+            }
+
+            $this->pdo->commit();
+            $this->logger->info("Klant aangemaakt id={$klantId}");
+            return ['id' => $klantId, 'fout' => ''];
+
         } catch (PDOException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             $this->logger->error('Klant::aanmaken – ' . $e->getMessage());
             return ['id' => 0, 'fout' => 'Databasefout bij aanmaken klant.'];
         }
     }
 
     /**
-     * Wijzig een bestaande klant via stored procedure.
+     * Wijzig een bestaande klant.
      *
-     * @param  int                  $klantId
-     * @param  array<string,string> $data
+     * @param  array<string,mixed> $data
      * @return string Lege string bij succes, foutmelding bij fout
      */
     public function wijzigen(int $klantId, array $data): string
     {
         try {
-            // Hash wachtwoord alleen als ingevuld
-            $hash = '';
+            // Haal gebruiker_id op
+            $stmtId = $this->pdo->prepare(
+                'SELECT `gebruiker_id` FROM `klanten` WHERE `id` = :id LIMIT 1'
+            );
+            $stmtId->bindValue(':id', $klantId, PDO::PARAM_INT);
+            $stmtId->execute();
+            $rij = $stmtId->fetch();
+
+            if (!$rij) {
+                return 'Klant niet gevonden.';
+            }
+            $gebruikerId = (int) $rij['gebruiker_id'];
+
+            // Controleer uniek e-mailadres (excl. eigen gebruiker)
+            $check = $this->pdo->prepare(
+                'SELECT COUNT(*) AS aantal FROM `gebruikers` WHERE `email` = :email AND `id` != :id'
+            );
+            $check->bindValue(':email', $data['email'], PDO::PARAM_STR);
+            $check->bindValue(':id',    $gebruikerId,   PDO::PARAM_INT);
+            $check->execute();
+            if ((int)$check->fetch()['aantal'] > 0) {
+                return 'E-mailadres is al in gebruik door een andere gebruiker.';
+            }
+
+            $this->pdo->beginTransaction();
+
+            // Update gebruiker
+            $stmtGebr = $this->pdo->prepare(
+                'UPDATE `gebruikers` SET `naam` = :naam, `email` = :email WHERE `id` = :id'
+            );
+            $stmtGebr->bindValue(':naam',  $data['naam'],  PDO::PARAM_STR);
+            $stmtGebr->bindValue(':email', $data['email'], PDO::PARAM_STR);
+            $stmtGebr->bindValue(':id',    $gebruikerId,   PDO::PARAM_INT);
+            $stmtGebr->execute();
+
+            // Update wachtwoord alleen als ingevuld
             if (!empty($data['wachtwoord'])) {
                 $hash = password_hash($data['wachtwoord'], PASSWORD_BCRYPT);
+                $stmtWw = $this->pdo->prepare(
+                    'UPDATE `gebruikers` SET `wachtwoord` = :ww WHERE `id` = :id'
+                );
+                $stmtWw->bindValue(':ww', $hash,        PDO::PARAM_STR);
+                $stmtWw->bindValue(':id', $gebruikerId, PDO::PARAM_INT);
+                $stmtWw->execute();
             }
 
-            $sql = 'CALL sp_klant_wijzigen(:id, :naam, :email, :ww, :adres, :tel, :all, :wens, @fout)';
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->bindValue(':id',    $klantId,                      PDO::PARAM_INT);
-            $stmt->bindValue(':naam',  $data['naam'],                 PDO::PARAM_STR);
-            $stmt->bindValue(':email', $data['email'],                PDO::PARAM_STR);
-            $stmt->bindValue(':ww',    $hash,                         PDO::PARAM_STR);
-            $stmt->bindValue(':adres', $data['adres'] ?? '',          PDO::PARAM_STR);
-            $stmt->bindValue(':tel',   $data['telefoonnummer'] ?? '', PDO::PARAM_STR);
-            $stmt->bindValue(':all',   $data['allergieen'] ?? '',     PDO::PARAM_STR);
-            $stmt->bindValue(':wens',  $data['wensen'] ?? '',         PDO::PARAM_STR);
-            $stmt->execute();
+            // Update klantprofiel
+            $stmtKlant = $this->pdo->prepare('
+                UPDATE `klanten`
+                SET `adres`          = :adres,
+                    `telefoonnummer` = :tel,
+                    `wensen`         = :wens
+                WHERE `id` = :id
+            ');
+            $stmtKlant->bindValue(':adres', $data['adres'] ?? '',          PDO::PARAM_STR);
+            $stmtKlant->bindValue(':tel',   $data['telefoonnummer'] ?? '', PDO::PARAM_STR);
+            $stmtKlant->bindValue(':wens',  $data['wensen'] ?? '',         PDO::PARAM_STR);
+            $stmtKlant->bindValue(':id',    $klantId,                      PDO::PARAM_INT);
+            $stmtKlant->execute();
 
-            $res  = $this->pdo->query('SELECT @fout AS fout')->fetch();
-            $fout = (string)($res['fout'] ?? '');
+            // Vervang allergenen
+            $delAll = $this->pdo->prepare(
+                'DELETE FROM `klant_allergenen` WHERE `klant_id` = :id'
+            );
+            $delAll->bindValue(':id', $klantId, PDO::PARAM_INT);
+            $delAll->execute();
 
-            if ($fout === '') {
-                $this->logger->info("Klant id={$klantId} gewijzigd.");
-            } else {
-                $this->logger->warning("Klant wijzigen mislukt: {$fout}");
+            $allergenenIds = $data['allergenen'] ?? [];
+            if (!empty($allergenenIds)) {
+                $ins = $this->pdo->prepare(
+                    'INSERT INTO `klant_allergenen` (`klant_id`, `allergeen_id`) VALUES (:kid, :aid)'
+                );
+                foreach ($allergenenIds as $aid) {
+                    $ins->bindValue(':kid', $klantId,  PDO::PARAM_INT);
+                    $ins->bindValue(':aid', (int)$aid, PDO::PARAM_INT);
+                    $ins->execute();
+                }
             }
 
-            return $fout;
+            $this->pdo->commit();
+            $this->logger->info("Klant id={$klantId} gewijzigd.");
+            return '';
+
         } catch (PDOException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             $this->logger->error('Klant::wijzigen – ' . $e->getMessage());
             return 'Databasefout bij wijzigen klant.';
         }
     }
 
     /**
-     * Verwijder een klant (en bijbehorende gebruiker via CASCADE) via stored procedure.
+     * Verwijder een klant (gebruiker verwijderen triggert CASCADE op klanten + klant_allergenen).
      *
      * @return string Lege string bij succes, foutmelding bij fout
      */
     public function verwijderen(int $klantId): string
     {
         try {
-            $stmt = $this->pdo->prepare('CALL sp_klant_verwijderen(:id, @fout)');
-            $stmt->bindValue(':id', $klantId, PDO::PARAM_INT);
-            $stmt->execute();
+            $stmtId = $this->pdo->prepare(
+                'SELECT `gebruiker_id` FROM `klanten` WHERE `id` = :id LIMIT 1'
+            );
+            $stmtId->bindValue(':id', $klantId, PDO::PARAM_INT);
+            $stmtId->execute();
+            $rij = $stmtId->fetch();
 
-            $res  = $this->pdo->query('SELECT @fout AS fout')->fetch();
-            $fout = (string)($res['fout'] ?? '');
-
-            if ($fout === '') {
-                $this->logger->info("Klant id={$klantId} verwijderd.");
-            } else {
-                $this->logger->warning("Klant verwijderen mislukt: {$fout}");
+            if (!$rij) {
+                return 'Klant niet gevonden.';
             }
 
-            return $fout;
+            $this->pdo->beginTransaction();
+
+            // Verwijder gebruiker — CASCADE verwijdert klant + klant_allergenen
+            $stmt = $this->pdo->prepare('DELETE FROM `gebruikers` WHERE `id` = :id');
+            $stmt->bindValue(':id', (int)$rij['gebruiker_id'], PDO::PARAM_INT);
+            $stmt->execute();
+
+            $this->pdo->commit();
+            $this->logger->info("Klant id={$klantId} verwijderd.");
+            return '';
+
         } catch (PDOException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             $this->logger->error('Klant::verwijderen – ' . $e->getMessage());
             return 'Databasefout bij verwijderen klant.';
         }
     }
 
     /**
-     * Haal dashboardstatistieken op via stored procedure.
+     * Haal dashboardstatistieken op.
      *
      * @return array<string,int>
      */
     public function statistieken(): array
     {
         try {
-            $stmt = $this->pdo->prepare('CALL sp_dashboard_statistieken()');
+            $sql = "
+                SELECT
+                    (SELECT COUNT(*) FROM `klanten`)                               AS aantal_klanten,
+                    (SELECT COUNT(*) FROM `afspraken` WHERE `status` = 'gepland') AS geplande_afspraken,
+                    (SELECT COUNT(*) FROM `medewerkers`)                           AS aantal_medewerkers,
+                    (SELECT COUNT(*) FROM `producten` WHERE `voorraad` = 0)        AS producten_uitverkocht
+            ";
+            $stmt = $this->pdo->prepare($sql);
             $stmt->execute();
             $rij = $stmt->fetch();
             return $rij ?: [];

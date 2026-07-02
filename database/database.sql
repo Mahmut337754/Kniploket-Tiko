@@ -63,6 +63,35 @@ CREATE TABLE IF NOT EXISTS `klanten` (
 ) ENGINE=InnoDB;
 
 -- -------------------------------------------------------
+-- Tabel: allergenen
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `allergenen` (
+    `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `naam` VARCHAR(100) NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_naam` (`naam`)
+) ENGINE=InnoDB;
+
+-- -------------------------------------------------------
+-- Tabel: klant_allergenen (koppeltabel)
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `klant_allergenen` (
+    `klant_id`     INT UNSIGNED NOT NULL,
+    `allergeen_id` INT UNSIGNED NOT NULL,
+    PRIMARY KEY (`klant_id`, `allergeen_id`),
+    CONSTRAINT `fk_ka_klant`
+        FOREIGN KEY (`klant_id`)
+        REFERENCES `klanten` (`id`)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT `fk_ka_allergeen`
+        FOREIGN KEY (`allergeen_id`)
+        REFERENCES `allergenen` (`id`)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- -------------------------------------------------------
 -- Tabel: medewerkers
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `medewerkers` (
@@ -266,6 +295,34 @@ CREATE TABLE IF NOT EXISTS `bestelregels` (
 -- =====================================================
 -- TESTDATA
 -- =====================================================
+-- Allergenen (EU-erkende + kappersgerelateerde stoffen)
+INSERT INTO `allergenen` (`id`, `naam`) VALUES
+    (1,  'Gluten'),
+    (2,  'Schaaldieren'),
+    (3,  'Eieren'),
+    (4,  'Vis'),
+    (5,  'Pinda'),
+    (6,  'Soja'),
+    (7,  'Melk / Lactose'),
+    (8,  'Noten'),
+    (9,  'Selderij'),
+    (10, 'Mosterd'),
+    (11, 'Sesam'),
+    (12, 'Sulfiet / Zwaveldioxide'),
+    (13, 'Lupine'),
+    (14, 'Weekdieren'),
+    (15, 'Ammoniak'),
+    (16, 'Waterstofperoxide'),
+    (17, 'Parafenylenediamine (PPD)'),
+    (18, 'Resorcinol'),
+    (19, 'Parfum / Geurstoffen'),
+    (20, 'Propyleenglycol'),
+    (21, 'Formaldehyde'),
+    (22, 'Methylisothiazolinon'),
+    (23, 'Lanoline'),
+    (24, 'Latex'),
+    (25, 'Nickel');
+
 -- Rollen
 INSERT INTO `rollen` (`id`, `naam`) VALUES
     (1, 'eigenaar'),
