@@ -46,9 +46,15 @@ abstract class Controller
 
     /**
      * Stuur de gebruiker door naar een ander URL.
+     * Houdt rekening met het base-pad als de app in een submap draait.
      */
     protected function redirect(string $url): never
     {
+        $base = defined('BASE_URL') ? BASE_URL : '';
+        // Voorkom dubbele base-prefix
+        if ($base !== '' && !str_starts_with($url, $base)) {
+            $url = $base . $url;
+        }
         header('Location: ' . $url);
         exit;
     }

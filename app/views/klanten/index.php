@@ -91,7 +91,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
-                <form method="POST" action="/klanten/verwijderen" id="verwijderForm">
+                <form method="POST" action="<?= url('/klanten/verwijderen') ?>" id="verwijderForm">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="id" id="verwijderIdInput">
                     <button type="submit" class="btn btn-danger">

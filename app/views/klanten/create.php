@@ -12,7 +12,7 @@
 
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <form method="POST" action="/klanten/aanmaken" novalidate id="klantForm">
+                <form method="POST" action="<?= url('/klanten/aanmaken') ?>" novalidate id="klantForm">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
                     <div class="row g-3">

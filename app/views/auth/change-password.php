@@ -4,7 +4,7 @@
 
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <form method="POST" action="/wachtwoord-wijzigen" novalidate id="wachtwoordForm">
+                <form method="POST" action="<?= url('/wachtwoord-wijzigen') ?>" novalidate id="wachtwoordForm">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
                     <!-- Huidig wachtwoord -->

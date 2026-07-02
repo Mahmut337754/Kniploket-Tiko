@@ -121,7 +121,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
-                <form method="POST" action="/klanten/verwijderen">
+                <form method="POST" action="<?= url('/klanten/verwijderen') ?>">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="id" value="<?= (int)$klant['id'] ?>">
                     <button type="submit" class="btn btn-danger">

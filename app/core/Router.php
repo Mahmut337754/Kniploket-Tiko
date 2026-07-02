@@ -4,32 +4,29 @@ namespace App\Core;
 
 /**
  * Eenvoudige front-controller router.
- *
- * Leest routes uit app/config/routes.php en dispatcht naar de juiste
- * controller-actie op basis van HTTP-methode en URI-pad.
  */
 class Router
 {
-    /** @var array<string, array{0:string,1:string}> Geregistreerde routes */
-    private array $routes = [];
-
-    /** @var Logger */
+    private array  $routes    = [];
     private Logger $logger;
+    private string $basePad   = '';
 
     public function __construct()
     {
-        $this->logger = new Logger();
-        $this->routes = require dirname(__DIR__) . '/config/routes.php';
+        $this->logger  = new Logger();
+        $this->routes  = require dirname(__DIR__) . '/config/routes.php';
+        $this->basePad = $this->bepaalBasePad();
+
+        // Stel base-pad beschikbaar als globale sessievariabele voor views
+        if (!defined('BASE_URL')) {
+            define('BASE_URL', $this->basePad);
+        }
     }
 
-    /**
-     * Verwerk het huidige verzoek en roep de bijbehorende controller aan.
-     */
     public function dispatch(): void
     {
         $methode = $_SERVER['REQUEST_METHOD'];
         $uri     = $this->normaliseUri($_SERVER['REQUEST_URI'] ?? '/');
-
         $sleutel = $methode . ' ' . $uri;
 
         if (!isset($this->routes[$sleutel])) {
@@ -40,7 +37,6 @@ class Router
         }
 
         [$controllerNaam, $actie] = $this->routes[$sleutel];
-
         $volledigeNaam = 'App\\Controllers\\' . $controllerNaam;
 
         if (!class_exists($volledigeNaam)) {
@@ -63,23 +59,29 @@ class Router
     }
 
     /**
-     * Verwijder query-string en normaliseer het pad.
+     * Bepaal het base-pad (submap waar index.php in staat).
+     * Bijv. /Examen/public of leeg als het de root is.
+     */
+    private function bepaalBasePad(): string
+    {
+        $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/index.php');
+        return ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/');
+    }
+
+    /**
+     * Strip het base-pad en normaliseer de URI.
      */
     private function normaliseUri(string $uri): string
     {
-        // Verwijder query-string
         $pad = parse_url($uri, PHP_URL_PATH) ?? '/';
 
-        // Verwijder eventuele submap-prefix (bijv. /Examen/public)
-        $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-        if ($scriptDir !== '/' && str_starts_with($pad, $scriptDir)) {
-            $pad = substr($pad, strlen($scriptDir));
+        // Strip base-pad prefix
+        if ($this->basePad !== '' && str_starts_with($pad, $this->basePad)) {
+            $pad = substr($pad, strlen($this->basePad));
         }
 
-        // Zorg voor leading slash
         $pad = '/' . ltrim($pad, '/');
 
-        // Verwijder trailing slash (behalve root)
         if ($pad !== '/') {
             $pad = rtrim($pad, '/');
         }

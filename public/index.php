@@ -27,7 +27,6 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Autoloader (PSR-4 via Composer, of eigen simpele versie)
 spl_autoload_register(function (string $klasse): void {
-    // Vervang namespace-scheidingstekens door mapscheidingstekens
     $pad = dirname(__DIR__) . '/app/' . str_replace(
         ['App\\', '\\'],
         ['',      '/'],
@@ -38,6 +37,9 @@ spl_autoload_register(function (string $klasse): void {
         require_once $pad;
     }
 });
+
+// Helper functies laden
+require_once dirname(__DIR__) . '/app/core/helpers.php';
 
 // Router starten
 use App\Core\Router;

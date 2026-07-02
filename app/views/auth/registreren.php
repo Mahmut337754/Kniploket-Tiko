@@ -12,7 +12,7 @@
 
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <form method="POST" action="/registreren" novalidate id="regForm">
+                <form method="POST" action="<?= url('/registreren') ?>" novalidate id="regForm">
                     <input type="hidden" name="csrf_token"
                         value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 
