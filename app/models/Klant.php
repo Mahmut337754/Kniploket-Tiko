@@ -264,13 +264,22 @@ class Klant
     }
 
     /**
-     * Verwijder een klant (gebruiker verwijderen triggert CASCADE op klanten + klant_allergenen).
+     * Verwijder een klant met alle gerelateerde data.
+     *
+     * Verwijdervolgorde:
+     * 1. bestelregels  (via bestellingen FK)
+     * 2. bestellingen
+     * 3. afspraken
+     * 4. klant_allergenen
+     * 5. klanten
+     * 6. gebruikers
      *
      * @return string Lege string bij succes, foutmelding bij fout
      */
     public function verwijderen(int $klantId): string
     {
         try {
+            // Haal gebruiker_id op
             $stmtId = $this->pdo->prepare(
                 'SELECT `gebruiker_id` FROM `klanten` WHERE `id` = :id LIMIT 1'
             );
@@ -281,16 +290,44 @@ class Klant
             if (!$rij) {
                 return 'Klant niet gevonden.';
             }
+            $gebruikerId = (int) $rij['gebruiker_id'];
 
             $this->pdo->beginTransaction();
 
-            // Verwijder gebruiker — CASCADE verwijdert klant + klant_allergenen
-            $stmt = $this->pdo->prepare('DELETE FROM `gebruikers` WHERE `id` = :id');
-            $stmt->bindValue(':id', (int)$rij['gebruiker_id'], PDO::PARAM_INT);
-            $stmt->execute();
+            // 1. Bestelregels van bestellingen van deze klant
+            $this->pdo->prepare('
+                DELETE br FROM `bestelregels` br
+                INNER JOIN `bestellingen` b ON b.id = br.bestelling_id
+                WHERE b.klant_id = :id
+            ')->execute([':id' => $klantId]);
+
+            // 2. Bestellingen
+            $this->pdo->prepare(
+                'DELETE FROM `bestellingen` WHERE `klant_id` = :id'
+            )->execute([':id' => $klantId]);
+
+            // 3. Afspraken
+            $this->pdo->prepare(
+                'DELETE FROM `afspraken` WHERE `klant_id` = :id'
+            )->execute([':id' => $klantId]);
+
+            // 4. Allergenen-koppeling
+            $this->pdo->prepare(
+                'DELETE FROM `klant_allergenen` WHERE `klant_id` = :id'
+            )->execute([':id' => $klantId]);
+
+            // 5. Klantprofiel
+            $this->pdo->prepare(
+                'DELETE FROM `klanten` WHERE `id` = :id'
+            )->execute([':id' => $klantId]);
+
+            // 6. Gebruikersaccount
+            $this->pdo->prepare(
+                'DELETE FROM `gebruikers` WHERE `id` = :id'
+            )->execute([':id' => $gebruikerId]);
 
             $this->pdo->commit();
-            $this->logger->info("Klant id={$klantId} verwijderd.");
+            $this->logger->info("Klant id={$klantId} (gebruiker id={$gebruikerId}) verwijderd.");
             return '';
 
         } catch (PDOException $e) {
@@ -298,7 +335,7 @@ class Klant
                 $this->pdo->rollBack();
             }
             $this->logger->error('Klant::verwijderen – ' . $e->getMessage());
-            return 'Databasefout bij verwijderen klant.';
+            return 'Databasefout bij verwijderen klant: ' . $e->getMessage();
         }
     }
 

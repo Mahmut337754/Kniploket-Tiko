@@ -242,7 +242,7 @@ CREATE TABLE IF NOT EXISTS `afspraken` (
     KEY `fk_afspraak_behandeling` (`behandeling_id`),
     KEY `idx_datum_starttijd`     (`datum`, `starttijd`),
     CONSTRAINT `fk_afspraak_klant`
-        FOREIGN KEY (`klant_id`)       REFERENCES `klanten` (`id`)       ON DELETE RESTRICT ON UPDATE CASCADE,
+        FOREIGN KEY (`klant_id`)       REFERENCES `klanten` (`id`)       ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT `fk_afspraak_medewerker`
         FOREIGN KEY (`medewerker_id`)  REFERENCES `medewerkers` (`id`)   ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT `fk_afspraak_behandeling`
@@ -265,7 +265,7 @@ CREATE TABLE IF NOT EXISTS `bestellingen` (
     CONSTRAINT `fk_bestelling_klant`
         FOREIGN KEY (`klant_id`)
         REFERENCES `klanten` (`id`)
-        ON DELETE RESTRICT
+        ON DELETE CASCADE
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
